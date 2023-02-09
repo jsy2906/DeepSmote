@@ -1,11 +1,22 @@
 import cv2
 import numpy as np
 
+from albumentations import (
+    HorizontalFlip, VerticalFlip, IAAPerspective, ShiftScaleRotate, CLAHE, RandomRotate90,
+    Transpose, ShiftScaleRotate, Blur, OpticalDistortion, GridDistortion, HueSaturationValue,
+    IAAAdditiveGaussianNoise, GaussNoise, MotionBlur, MedianBlur, IAAPiecewiseAffine, RandomResizedCrop,
+    IAASharpen, IAAEmboss, RandomBrightnessContrast, Flip, OneOf, Compose, Normalize, Cutout, CoarseDropout, ShiftScaleRotate, CenterCrop, Resize, SmallestMaxSize
+)
+from albumentations.pytorch import ToTensorV2
+
+from catalyst.data.sampler import BalanceClassSampler
 
 cfg = {
     'train_bs': 25,
     'valid_bs': 25,
     'num_workers' : 0,
+    
+    'enc_bs': 10,
     }
 
 
@@ -34,7 +45,7 @@ class AEDataset(Dataset):
             
             if one_hot_label is True:
                 self.labels = np.eye(self.df['label'].max()+1)[self.labels]
-                #print(self.labels)
+                
             
     def __len__(self):
         return self.df.shape[0]
@@ -63,14 +74,6 @@ class AEDataset(Dataset):
 ######################## get transforms #######################
 
 
-from albumentations import (
-    HorizontalFlip, VerticalFlip, IAAPerspective, ShiftScaleRotate, CLAHE, RandomRotate90,
-    Transpose, ShiftScaleRotate, Blur, OpticalDistortion, GridDistortion, HueSaturationValue,
-    IAAAdditiveGaussianNoise, GaussNoise, MotionBlur, MedianBlur, IAAPiecewiseAffine, RandomResizedCrop,
-    IAASharpen, IAAEmboss, RandomBrightnessContrast, Flip, OneOf, Compose, Normalize, Cutout, CoarseDropout, ShiftScaleRotate, CenterCrop, Resize, SmallestMaxSize
-)
-from albumentations.pytorch import ToTensorV2
-
 def get_train_transforms(image_size):
     return Compose([
             Resize(image_size, image_size),   # (h, w)
@@ -95,7 +98,6 @@ def get_valid_transforms(image_size):
 def prepare_dataloader(image_size, train, valid, trn_batch=cfg['train_bs'], val_batch=cfg['valid_bs'],
                        trn_root=train.dir.values, val_root=valid.dir.values, num_workers=cfg['num_workers']):
     
-    from catalyst.data.sampler import BalanceClassSampler
 
     train_ds = AEDataset(train, trn_root, transforms=get_train_transforms(image_size), output_label=True, one_hot_label=False)
     valid_ds = AEDataset(valid, val_root, transforms=get_valid_transforms(image_size), output_label=True)
@@ -117,3 +119,28 @@ def prepare_dataloader(image_size, train, valid, trn_batch=cfg['train_bs'], val_
         pin_memory=False,
     )
     return train_loader, val_loader
+
+
+
+######################## get test dataloader ########################
+
+def get_test_transforms(image_size):
+    return Compose([
+            Resize(image_size, image_size),
+            Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225], max_pixel_value=255.0, p=1.0),
+            ToTensorV2(p=1.0),
+        ], p=1.)
+
+
+def prepare_test_dataloader(image_size, test, tst_batch=cfg['enc_bs'], num_workers=cfg['num_workers'], tst_root=test.dir.values,):
+    
+    test_ds = AEDataset(test, tst_root, transforms=get_test_transforms(image_size), output_label=True)
+    
+    tst_loader = torch.utils.data.DataLoader(
+        test_ds, 
+        batch_size=tst_batch,
+        num_workers=num_workers,
+        shuffle=False,
+        pin_memory=False,
+    )
+    return tst_loader
