@@ -1,0 +1,33 @@
+from train import wandb_train
+
+
+cfg = {
+    'seed': 0,
+    'img_size': 224,
+    'latent_size' : 1000,
+    'dim' : 64,
+    'epochs': 500,
+    'train_bs': 25,
+    'valid_bs': 25,
+    'lr': 1e-4,
+    'weight_decay':1e-5,
+    'num_workers' : 0
+    'device': 'cuda:0'
+}
+
+
+
+enc_dir = 'dir to save encoder model'
+dec_dir = 'dir to save decoder model'
+project = 'wandb project name'
+name = 'running name'
+# train_df, valid_df must contain columns data directory, data name and label
+                
+train_loss, train_ssim, train_loss_list, train_ssim_list, \
+valid_loss, valid_ssim, valid_loss_list, valid_ssim_list, time_, \
+train_img_list, train_label_list, train_pred_list, \
+valid_img_list, valid_label_list, valid_pred_list \
+            = wandb_train(cfg, enc_dir, dec_dir, project, name,
+                          train_df, valid_df, noise_prob=0.2, use=False)
+                          
+                          
