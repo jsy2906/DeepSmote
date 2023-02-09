@@ -1,0 +1,12 @@
+from save_result import save_result
+
+class_ = 'your dataset class, dict type'
+# data is imbalanced dataset
+# data_df must contain columns data directory, data name and label
+enc_dir = 'encoder model dir to use'
+dec_dir = 'decoder model dir to use'
+save_dir = 'dir to save the generate image data'
+
+save_result(class_, data_df, enc_dir, dec_dir, save_dir)
+
+
