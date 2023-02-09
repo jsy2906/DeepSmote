@@ -5,6 +5,7 @@ import numpy as np
 cfg = {
     'train_bs': 25,
     'valid_bs': 25,
+    'num_workers' : 0,
     }
 
 
@@ -92,7 +93,7 @@ def get_valid_transforms(image_size):
  
 
 def prepare_dataloader(image_size, train, valid, trn_batch=cfg['train_bs'], val_batch=cfg['valid_bs'],
-                       trn_root=train.dir.values, val_root=valid.dir.values,):
+                       trn_root=train.dir.values, val_root=valid.dir.values, num_workers=cfg['num_workers']):
     
     from catalyst.data.sampler import BalanceClassSampler
 
@@ -105,13 +106,13 @@ def prepare_dataloader(image_size, train, valid, trn_batch=cfg['train_bs'], val_
         pin_memory=False,
         drop_last=False,
         shuffle=False,        
-        num_workers=0,
+        num_workers=num_workers,
         sampler=BalanceClassSampler(labels=train['label'].values, mode="upsampling")
     )
     val_loader = torch.utils.data.DataLoader(
         valid_ds, 
         batch_size=val_batch,
-        num_workers=0,
+        num_workers=num_workers,
         shuffle=False,
         pin_memory=False,
     )
