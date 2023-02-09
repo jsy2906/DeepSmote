@@ -1,6 +1,13 @@
 import torch.nn as nn
 
 
+cfg = {
+    'img_size': 224,
+    'latent_size' : 1000,
+    'dim' : 64,
+    }
+
+
 class Encoder(nn.Module):
     def __init__(self, latent, dim, img_size):
         super(Encoder, self).__init__()
